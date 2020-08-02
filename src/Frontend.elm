@@ -3,7 +3,7 @@ module Frontend exposing (..)
 import Browser
 import Browser.Navigation
 import Html exposing (..)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (class, classList, style)
 import Html.Events exposing (onClick)
 import Lamdera
 import Types exposing (..)
@@ -36,19 +36,49 @@ app =
 -- Support
 
 
+type Page
+    = PageSt
+    | PageEdit
+    | PagePick
+    | PageChar Id
+
+
+page : Model -> Page
+page model =
+    case model.url.path of
+        "/st" ->
+            PageSt
+
+        "/edit" ->
+            PageEdit
+
+        s ->
+            case s |> String.dropLeft 1 |> String.toInt of
+                Nothing ->
+                    PagePick
+
+                Just id ->
+                    PageChar id
+
+
 isSt : Model -> Bool
 isSt model =
-    model.url.path == "/st"
+    page model == PageSt
 
 
 isEdit : Model -> Bool
 isEdit model =
-    model.url.path == "/edit"
+    page model == PageEdit
 
 
 isSelected : Model -> Character -> Bool
 isSelected model char =
-    model.selectedCharacterId == Just char.id
+    case page model of
+        PageChar id ->
+            char.id == id
+
+        _ ->
+            False
 
 
 {-| Tea
@@ -56,7 +86,6 @@ isSelected model char =
 init : Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init url key =
     ( { characters = []
-      , selectedCharacterId = Nothing
       , url = url
       , navKey = key
       }
@@ -90,7 +119,8 @@ update msg model =
             )
 
         OnSelectCharacter maybeId ->
-            { model | selectedCharacterId = maybeId }
+            -- TODO
+            model
                 |> noCmd
 
 
@@ -108,11 +138,16 @@ updateFromBackend msg model =
 
 css =
     """
+body {
+  background-color: black;
+  color: white;
+}
+
 .flex { display: flex; }
 
 .pool-label { width: 6em; }
 .pool-value { width: 2em; }
-.bar { height: 1em; }
+.bar { height: 1.2em; }
 
 """
 
@@ -121,21 +156,22 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Serendepitous Assistant"
     , body =
-        [ if isEdit model then
-            model.characters
-                |> List.map (viewCharacterEdit model)
-                |> div []
+        [ case page model of
+            PageEdit ->
+                model.characters
+                    |> List.map (viewCharacterEdit model)
+                    |> div []
 
-          else if model.selectedCharacterId == Nothing && not (isSt model) then
-            viewWhoAreYou model
+            PagePick ->
+                viewWhoAreYou model
 
-          else
-            model.characters
-                |> List.sortBy .name
-                |> List.partition (\c -> Just c.id == model.selectedCharacterId)
-                |> (\( myChar, otherChars ) -> myChar ++ otherChars)
-                |> List.map (viewCharacter model)
-                |> div []
+            _ ->
+                model.characters
+                    |> List.sortBy .name
+                    |> List.partition (isSelected model)
+                    |> (\( myChar, otherChars ) -> myChar ++ otherChars)
+                    |> List.map (viewCharacter model)
+                    |> div []
         , if isEdit model then
             viewAddCharacter
 
@@ -284,21 +320,10 @@ viewPool model pt char =
 
         available =
             pool.max - pool.used - pool.committed
-
-        viewBar color value =
-            if value == 0 then
-                text ""
-
-            else
-                div
-                    [ Html.Attributes.style "width" <| String.fromInt value ++ "em"
-                    , Html.Attributes.style "background-color" color
-                    , class "bar"
-                    ]
-                    []
     in
     div
-        [ class "flex" ]
+        [ class "flex"
+        ]
         [ span [ class "pool-label" ] [ text <| Debug.toString pt ]
         , span [ class "pool-value" ] [ text <| String.fromInt available ]
         , if isSelected model char then
@@ -310,10 +335,28 @@ viewPool model pt char =
 
           else
             text ""
-        , viewBar committedColor pool.committed
-        , viewBar availableColor available
-        , viewBar usedColor pool.used
+        , div
+            [ class "flex bar"
+            , style "border" <| usedColor ++ " solid 1px"
+            ]
+            [ viewBar committedColor "none" pool.committed
+            , viewBar availableColor usedColor available
+            , viewBar "none" usedColor pool.used
+            ]
         ]
+
+
+viewBar : String -> String -> Int -> Html Msg
+viewBar backgroundColor borderColor value =
+    if value == 0 then
+        text ""
+
+    else
+        div
+            [ style "width" <| String.fromInt value ++ "em"
+            , style "background-color" backgroundColor
+            ]
+            []
 
 
 viewRecovery : Character -> Html Msg

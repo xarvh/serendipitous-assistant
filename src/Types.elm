@@ -14,7 +14,6 @@ noCmd model =
 -}
 type alias FrontendModel =
     { characters : List Character
-    , selectedCharacterId : Maybe Id
     , url : Url
     , navKey : Key
     }

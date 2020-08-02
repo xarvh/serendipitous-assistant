@@ -107,4 +107,8 @@ updateFromFrontend sessionId clientId msg model =
             updateId id upd model
 
         TbDeltaPool id poolType delta ->
-            updateId id (updatePool poolType (\pool -> { pool | used = pool.used + delta })) model
+            let
+                upd pool =
+                    { pool | used = clamp 0 (pool.max - pool.committed) (pool.used + delta) }
+            in
+            updateId id (updatePool poolType upd) model
