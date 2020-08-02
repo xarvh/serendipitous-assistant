@@ -147,7 +147,7 @@ body {
 
 .pool-label { width: 6em; }
 .pool-value { width: 2em; }
-.bar { height: 1.2em; }
+.bar { height: 1.2em; width: fit-content; }
 
 """
 
@@ -238,7 +238,7 @@ viewCharacter model pc =
         [ h3 [] [ text pc.name ]
         , div
             []
-            [ div
+            [ table
                 []
                 [ viewTier pc.tier
                 , viewPoints model Destiny pc
@@ -257,7 +257,10 @@ viewCharacter model pc =
 
 viewTier : Int -> Html Msg
 viewTier t =
-    div [] [ "Tier: " ++ String.fromInt t |> text ]
+    tr []
+        [ td [] [ text "Tier" ]
+        , td [] [ String.fromInt t |> text ]
+        ]
 
 
 viewPoints : Model -> Points -> Character -> Html Msg
@@ -271,21 +274,30 @@ viewPoints model p char =
                 Experience ->
                     char.xps
     in
-    div []
-        [ [ Debug.toString p
-          , "points:"
-          , String.fromInt n
-          ]
-            |> String.join " "
-            |> text
-        , if isSt model then
-            button [ onRecklessClick <| TbDeltaPoints char.id p 1 ] [ text "Add 1" ]
+    tr
+        []
+        [ td
+            []
+            [ [ Debug.toString p
+              , "points"
+              ]
+                |> String.join " "
+                |> text
+            ]
+        , td
+            []
+            [ String.fromInt n |> text ]
+        , td
+            []
+            [ if isSt model then
+                button [ onRecklessClick <| TbDeltaPoints char.id p 1 ] [ text "Add 1" ]
 
-          else if isSelected model char && n > 0 then
-            button [ onRecklessClick <| TbDeltaPoints char.id p -1 ] [ text "Use 1" ]
+              else if isSelected model char && n > 0 then
+                button [ onRecklessClick <| TbDeltaPoints char.id p -1 ] [ text "Use 1" ]
 
-          else
-            text ""
+              else
+                text ""
+            ]
         ]
 
 
@@ -321,27 +333,31 @@ viewPool model pt char =
         available =
             pool.max - pool.used - pool.committed
     in
-    div
-        [ class "flex"
-        ]
-        [ span [ class "pool-label" ] [ text <| Debug.toString pt ]
-        , span [ class "pool-value" ] [ text <| String.fromInt available ]
-        , if isSelected model char then
-            div
-                []
-                [ button [ onRecklessClick <| TbDeltaPool char.id pt 1 ] [ text "-" ]
-                , button [ onRecklessClick <| TbDeltaPool char.id pt -1 ] [ text "+" ]
-                ]
+    tr
+        []
+        [ td [] [ span [ class "pool-label" ] [ text <| Debug.toString pt ] ]
+        , td [] [ span [ class "pool-value" ] [ text <| String.fromInt available ] ]
+        , td []
+            [ if isSelected model char then
+                div
+                    []
+                    [ button [ onRecklessClick <| TbDeltaPool char.id pt 1 ] [ text "-" ]
+                    , button [ onRecklessClick <| TbDeltaPool char.id pt -1 ] [ text "+" ]
+                    ]
 
-          else
-            text ""
-        , div
-            [ class "flex bar"
-            , style "border" <| usedColor ++ " solid 1px"
+              else
+                text ""
             ]
-            [ viewBar committedColor "none" pool.committed
-            , viewBar availableColor usedColor available
-            , viewBar "none" usedColor pool.used
+        , td
+            []
+            [ div
+                [ class "flex bar"
+                , style "border" <| usedColor ++ " solid 1px"
+                ]
+                [ viewBar committedColor "none" pool.committed
+                , viewBar availableColor usedColor available
+                , viewBar "none" usedColor pool.used
+                ]
             ]
         ]
 
