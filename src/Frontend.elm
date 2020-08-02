@@ -129,13 +129,17 @@ update msg model =
 
         OnTextareaInput s ->
             ( { model | edit = s }
-            , case Json.Decode.decodeString (Json.Decode.list characterDecoder) s of
+            , case pcsFromString s of
                 Ok pcs ->
                     Lamdera.sendToBackend <| TbJson pcs
 
                 Err err ->
                     Cmd.none
             )
+
+
+pcsFromString =
+    Json.Decode.decodeString (Json.Decode.list characterDecoder)
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd Msg )
@@ -164,6 +168,10 @@ body {
 }
 
 .flex { display: flex; }
+.flex-center { align-items: center; }
+.mr1 { margin-right: 0.5em; }
+.mr2 { margin-right: 1em; }
+.w100 { width: 100%; }
 
 .pool-label { width: 6em; }
 .pool-value { width: 2em; }
@@ -228,6 +236,13 @@ viewEdit content =
             , style "height" "90vh"
             ]
             [ text content ]
+        , div
+            []
+            [ content
+                |> pcsFromString
+                |> Debug.toString
+                |> text
+            ]
         ]
 
 
@@ -241,8 +256,16 @@ viewCharacter model pc =
         []
         [ h3 [] [ text pc.name ]
         , div
-            []
-            [ table
+            [ class "flex flex-center" ]
+            [ div
+                [ style "background-image" <| "url(" ++ pc.url ++ ")"
+                , style "background-size" "contain"
+                , style "width" "8em"
+                , style "height" "10em"
+                , class "mr2"
+                ]
+                []
+            , table
                 []
                 [ viewTier pc.tier
                 , viewPoints model Destiny pc
@@ -294,10 +317,18 @@ viewPoints model p char =
         , td
             []
             [ if isSt model then
-                button [ onRecklessClick <| TbDeltaPoints char.id p 1 ] [ text "Add 1" ]
+                button
+                    [ onRecklessClick <| TbDeltaPoints char.id p 1
+                    , class "w100"
+                    ]
+                    [ text "Add 1" ]
 
               else if isSelected model char && n > 0 then
-                button [ onRecklessClick <| TbDeltaPoints char.id p -1 ] [ text "Use 1" ]
+                button
+                    [ onRecklessClick <| TbDeltaPoints char.id p -1
+                    , class "w100"
+                    ]
+                    [ text "Use 1" ]
 
               else
                 text ""
@@ -346,6 +377,7 @@ viewPool model pt char =
                 div
                     []
                     [ button [ onRecklessClick <| TbDeltaPool char.id pt 1 ] [ text "-" ]
+                    , span [ class "mr1" ] []
                     , button [ onRecklessClick <| TbDeltaPool char.id pt -1 ] [ text "+" ]
                     ]
 

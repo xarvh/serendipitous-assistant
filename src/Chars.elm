@@ -14,6 +14,7 @@ type alias Id =
 type alias Character =
     { id : Int
     , name : String
+    , url : String
     , tier : Int
     , dps : Int
     , xps : Int
@@ -30,6 +31,7 @@ initCharacter : Id -> Character
 initCharacter id =
     { id = id
     , name = ""
+    , url = ""
     , tier = 1
     , dps = 0
     , xps = 0
@@ -47,6 +49,7 @@ characterDecoder =
     Json.Decode.succeed Character
         |> required "id" Json.Decode.int
         |> required "name" Json.Decode.string
+        |> required "url" Json.Decode.string
         |> required "tier" Json.Decode.int
         |> required "dps" Json.Decode.int
         |> required "xps" Json.Decode.int
@@ -63,6 +66,7 @@ encodeCharacter c =
     Json.Encode.object
         [ ( "id", Json.Encode.int c.id )
         , ( "name", Json.Encode.string c.name )
+        , ( "url", Json.Encode.string c.url )
         , ( "tier", Json.Encode.int c.tier )
         , ( "dps", Json.Encode.int c.dps )
         , ( "xps", Json.Encode.int c.xps )
