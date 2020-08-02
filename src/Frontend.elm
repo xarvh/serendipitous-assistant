@@ -2,9 +2,12 @@ module Frontend exposing (..)
 
 import Browser
 import Browser.Navigation
+import Chars exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, classList, style)
 import Html.Events exposing (onClick)
+import Json.Decode
+import Json.Encode
 import Lamdera
 import Types exposing (..)
 import Url exposing (Url)
@@ -86,6 +89,7 @@ isSelected model char =
 init : Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init url key =
     ( { characters = []
+      , edit = ""
       , url = url
       , navKey = key
       }
@@ -97,7 +101,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UrlChanged url ->
-            ( model, Cmd.none )
+            ( { model | url = url }, Cmd.none )
 
         UrlClicked urlRequest ->
             case urlRequest of
@@ -118,17 +122,33 @@ update msg model =
             , Lamdera.sendToBackend toBackend
             )
 
-        OnSelectCharacter maybeId ->
-            -- TODO
-            model
-                |> noCmd
+        OnSelectCharacter id ->
+            ( model
+            , Browser.Navigation.pushUrl model.navKey <| "/" ++ String.fromInt id
+            )
+
+        OnTextareaInput s ->
+            ( { model | edit = s }
+            , case Json.Decode.decodeString (Json.Decode.list characterDecoder) s of
+                Ok pcs ->
+                    Lamdera.sendToBackend <| TbJson pcs
+
+                Err err ->
+                    Cmd.none
+            )
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd Msg )
 updateFromBackend msg model =
     case msg of
         TfCharacters pcs ->
-            { model | characters = pcs }
+            { model
+                | characters = pcs
+                , edit =
+                    pcs
+                        |> Json.Encode.list encodeCharacter
+                        |> Json.Encode.encode 2
+            }
                 |> noCmd
 
 
@@ -158,9 +178,7 @@ view model =
     , body =
         [ case page model of
             PageEdit ->
-                model.characters
-                    |> List.map (viewCharacterEdit model)
-                    |> div []
+                viewEdit model.edit
 
             PagePick ->
                 viewWhoAreYou model
@@ -172,11 +190,6 @@ view model =
                     |> (\( myChar, otherChars ) -> myChar ++ otherChars)
                     |> List.map (viewCharacter model)
                     |> div []
-        , if isEdit model then
-            viewAddCharacter
-
-          else
-            text ""
         , node "style"
             []
             [ Html.text css ]
@@ -191,18 +204,8 @@ viewWhoAreYou model =
         [ h3 [] [ text "Who are you?" ]
         , model.characters
             |> List.sortBy .name
-            |> List.map (\c -> button [ onClick <| OnSelectCharacter <| Just c.id ] [ text c.name ])
+            |> List.map (\c -> button [ onClick <| OnSelectCharacter c.id ] [ text c.name ])
             |> div []
-        ]
-
-
-viewAddCharacter : Html Msg
-viewAddCharacter =
-    div
-        []
-        [ button
-            [ onRecklessClick TbAddCharacter ]
-            [ text "Add character" ]
         ]
 
 
@@ -215,15 +218,16 @@ onRecklessClick tb =
 -- View edit
 
 
-viewCharacterEdit : Model -> Character -> Html Msg
-viewCharacterEdit model pc =
+viewEdit : String -> Html Msg
+viewEdit content =
     div
         []
-        [ input
-            [ Html.Events.onInput <| OnRecklessSend << TbName pc.id
-            , Html.Attributes.value pc.name
+        [ textarea
+            [ Html.Events.onInput OnTextareaInput
+            , style "width" "100%"
+            , style "height" "90vh"
             ]
-            []
+            [ text content ]
         ]
 
 

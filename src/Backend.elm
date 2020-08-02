@@ -1,5 +1,6 @@
 module Backend exposing (..)
 
+import Chars exposing (..)
 import Lamdera
 import Types exposing (..)
 
@@ -79,16 +80,8 @@ updateFromFrontend sessionId clientId msg model =
         TbRequestCharacters ->
             sendPcs model
 
-        TbAddCharacter ->
-            let
-                id =
-                    model.characters
-                        |> List.map .id
-                        |> List.maximum
-                        |> Maybe.withDefault 0
-                        |> (+) 1
-            in
-            { model | characters = initCharacter id :: model.characters }
+        TbJson pcs ->
+            { model | characters = pcs }
                 |> sendPcs
 
         TbName id name ->
