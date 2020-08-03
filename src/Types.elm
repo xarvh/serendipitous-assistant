@@ -19,6 +19,7 @@ type alias FrontendModel =
     , edit : String
     , url : Url
     , navKey : Key
+    , displayCypher : Maybe CypherInstance
     }
 
 
@@ -28,6 +29,7 @@ type FrontendMsg
     | OnRecklessSend ToBackend
     | OnSelectCharacter Id
     | OnTextareaInput String
+    | OnMouseEnterCypher (Maybe CypherInstance)
 
 
 {-| Backend
@@ -51,6 +53,7 @@ type ToBackend
     | TbDeltaPoints Id Points Int
     | TbDeltaPool Id PoolType Int
     | TbRecovery Id Int
+    | TbRemoveCypher Id Int
 
 
 {-| To Frontend

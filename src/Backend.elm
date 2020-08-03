@@ -133,6 +133,21 @@ updateFromFrontend sessionId clientId msg model =
                         }
                     )
 
+        TbRemoveCypher id index ->
+            updateId id (\char -> { char | cyphers = list_remove index char.cyphers }) model
+
+
+list_remove : Int -> List a -> List a
+list_remove index l =
+    let
+        before =
+            List.take index l
+
+        after =
+            List.drop (index + 1) l
+    in
+    before ++ after
+
 
 
 -- Cyphers
@@ -161,7 +176,7 @@ cypherTypeToInstanceGenerator maybeType =
 
 makeCypher : CypherType -> Int -> List String -> CypherInstance
 makeCypher t d6 rollEffects =
-    { name = t.name
+    { name = String.left 1 t.name ++ String.dropLeft 1 (String.toLower t.name)
     , level = d6 + t.levelModifier
     , info =
         rollEffects
@@ -175,4 +190,4 @@ rollToGenerator roll =
     roll.options
         |> List.map (\option -> ( toFloat option.weight, Random.constant option.effect ))
         |> Random.Extra.frequency ( 0, Random.constant "" )
-        |> Random.map (\effect -> roll.name ++ ": " ++ effect)
+        |> Random.map (\effect -> roll.name ++ " " ++ effect)

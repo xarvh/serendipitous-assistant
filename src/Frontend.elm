@@ -92,6 +92,7 @@ init url key =
       , edit = ""
       , url = url
       , navKey = key
+      , displayCypher = Nothing
       }
     , Lamdera.sendToBackend TbRequestCharacters
     )
@@ -137,6 +138,11 @@ update msg model =
                     Cmd.none
             )
 
+        OnMouseEnterCypher cypher ->
+            ( { model | displayCypher = cypher }
+            , Cmd.none
+            )
+
 
 pcsFromString =
     Json.Decode.decodeString (Json.Decode.list characterDecoder)
@@ -173,6 +179,12 @@ body {
 .mr2 { margin-right: 1em; }
 .w100 { width: 100%; }
 .bold { font-weight: bold; }
+.red { color: red; }
+.border {
+  border: gray solid 1px;
+  border-radius: 0.2em;
+  padding: 0.5em;
+}
 
 .pool-label { width: 6em; }
 .pool-value { width: 2em; text-align: right; padding-right: 0.5em; }
@@ -193,12 +205,16 @@ view model =
                 viewWhoAreYou model
 
             _ ->
-                model.characters
-                    |> List.sortBy .name
-                    |> List.partition (isSelected model)
-                    |> (\( myChar, otherChars ) -> myChar ++ otherChars)
-                    |> List.map (viewCharacter model)
-                    |> div []
+                div
+                    [ class "flex" ]
+                    [ model.characters
+                        |> List.sortBy .name
+                        |> List.partition (isSelected model)
+                        |> (\( myChar, otherChars ) -> myChar ++ otherChars)
+                        |> List.map (viewCharacter model)
+                        |> div [ class "mr2" ]
+                    , viewDisplayCypher model.displayCypher
+                    ]
         , node "style"
             []
             [ Html.text css ]
@@ -257,7 +273,7 @@ viewCharacter model pc =
         []
         [ h3 [] [ text pc.name ]
         , div
-            [ class "flex flex-center" ]
+            [ class "flex" ]
             [ div
                 [ style "background-image" <| "url(" ++ pc.url ++ ")"
                 , style "background-size" "contain"
@@ -276,15 +292,19 @@ viewCharacter model pc =
                 , viewPool model Essence pc
                 ]
             , div
-                []
+                [ class "border mr1" ]
                 [ h3 [] [ text "Recovery" ]
                 , List.range 0 3
                     |> List.map (viewRecovery model pc)
                     |> div []
                 ]
-            , pc.cyphers
-                |> List.indexedMap (viewCypher pc.maxCyphers)
-                |> div []
+            , div
+                [ class "border" ]
+                [ h3 [] [ text "Cyphers" ]
+                , pc.cyphers
+                    |> List.indexedMap (viewCypher model pc)
+                    |> ol []
+                ]
             ]
         ]
 
@@ -456,6 +476,35 @@ viewRecovery model char rec =
         ]
 
 
-viewCypher : Int -> Int -> CypherInstance -> Html Msg
-viewCypher max index cypher =
-    div [] [ text <| cypher.name ++ cypher.info ]
+viewCypher : Model -> Character -> Int -> CypherInstance -> Html Msg
+viewCypher model pc index cypher =
+    li
+        [ classList [ ( "red", index >= pc.maxCyphers ) ]
+        , Html.Events.onMouseEnter <| OnMouseEnterCypher <| Just cypher
+        , Html.Events.onMouseLeave <| OnMouseEnterCypher <| Nothing
+        ]
+        [ if isSelected model pc then
+            button [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ] [ text "X" ]
+
+          else
+            text ""
+        , span [] [ text cypher.name ]
+        ]
+
+
+viewDisplayCypher : Maybe CypherInstance -> Html Msg
+viewDisplayCypher maybeCypher =
+    case maybeCypher of
+        Nothing ->
+            text ""
+
+        Just c ->
+            div
+                [ style "flex" "1" ]
+                [ h3 [] [ text c.name ]
+                , div [] [ text <| "Level: " ++ String.fromInt c.level ]
+                , c.info
+                    |> String.split "\n"
+                    |> List.map (\s -> p [] [ text s ])
+                    |> div []
+                ]
