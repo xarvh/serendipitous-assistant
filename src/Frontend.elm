@@ -173,8 +173,36 @@ body {
   color: white;
 }
 
+button {
+  min-width: 2em;
+}
+
+
+/* Media */
+
+.portrait {
+  max-width: 8em;
+  max-height: 10em;
+}
+
+.media-layout {
+  display: flex;
+}
+
+/* TODO: use width instead */
+@media (orientation: portrait) {
+  .media-layout {
+      flex-direction: column;
+  }
+  .portrait {
+      display: none;
+  }
+}
+
+
+/* atomic */
+
 .flex { display: flex; }
-.flex-center { align-items: center; }
 .mr1 { margin-right: 0.5em; }
 .mr2 { margin-right: 1em; }
 .w100 { width: 100%; }
@@ -185,6 +213,8 @@ body {
   border-radius: 0.2em;
   padding: 0.5em;
 }
+
+/* specific */
 
 .pool-label { width: 6em; }
 .pool-value { width: 2em; text-align: right; padding-right: 0.5em; }
@@ -277,13 +307,11 @@ viewCharacter model pc =
         []
         [ h3 [] [ text pc.name ]
         , div
-            [ class "flex" ]
-            [ div
-                [ style "background-image" <| "url(" ++ pc.url ++ ")"
-                , style "background-size" "contain"
-                , style "width" "8em"
-                , style "height" "10em"
-                , class "mr2"
+            [ class "media-layout"
+            ]
+            [ img
+                [ Html.Attributes.src pc.url
+                , class "portrait mr2"
                 ]
                 []
             , table
