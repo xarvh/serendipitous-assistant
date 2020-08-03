@@ -1,8 +1,11 @@
 module Backend exposing (..)
 
 import Chars exposing (..)
+import Cyphers exposing (CypherType, Roll)
 import Lamdera
-import Random exposing (Seed)
+import Random exposing (Generator)
+import Random.Extra
+import Random.List
 import Task
 import Time
 import Types exposing (..)
@@ -117,5 +120,59 @@ updateFromFrontend sessionId clientId msg model =
             updateId id (updatePool poolType upd) model
 
         TbRecovery id rec ->
-            -- TODO add cypher
-            updateId id (\char -> { char | nextRecovery = rec + 1 |> modBy 4 }) model
+            let
+                ( cypher, seed ) =
+                    Random.step cypherGenerator model.seed
+            in
+            { model | seed = seed }
+                |> updateId id
+                    (\char ->
+                        { char
+                            | nextRecovery = rec + 1 |> modBy 4
+                            , cyphers = char.cyphers ++ [ cypher ]
+                        }
+                    )
+
+
+
+-- Cyphers
+
+
+cypherGenerator : Generator CypherInstance
+cypherGenerator =
+    Random.List.choose Cyphers.list
+        |> Random.andThen (Tuple.first >> cypherTypeToInstanceGenerator)
+
+
+cypherTypeToInstanceGenerator : Maybe CypherType -> Generator CypherInstance
+cypherTypeToInstanceGenerator maybeType =
+    case maybeType of
+        Nothing ->
+            Debug.todo "No list"
+
+        Just t ->
+            Random.map2 (makeCypher t)
+                (Random.int 1 6)
+                (t.rolls
+                    |> List.map rollToGenerator
+                    |> Random.Extra.combine
+                )
+
+
+makeCypher : CypherType -> Int -> List String -> CypherInstance
+makeCypher t d6 rollEffects =
+    { name = t.name
+    , level = d6 + t.levelModifier
+    , info =
+        rollEffects
+            |> (::) t.description
+            |> String.join "\n"
+    }
+
+
+rollToGenerator : Cyphers.Roll -> Generator String
+rollToGenerator roll =
+    roll.options
+        |> List.map (\option -> ( toFloat option.weight, Random.constant option.effect ))
+        |> Random.Extra.frequency ( 0, Random.constant "" )
+        |> Random.map (\effect -> roll.name ++ ": " ++ effect)

@@ -456,6 +456,6 @@ viewRecovery model char rec =
         ]
 
 
-viewCypher : Int -> Int -> Cypher -> Html Msg
+viewCypher : Int -> Int -> CypherInstance -> Html Msg
 viewCypher max index cypher =
-    div [] []
+    div [] [ text <| cypher.name ++ cypher.info ]

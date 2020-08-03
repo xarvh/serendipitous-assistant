@@ -22,7 +22,7 @@ type alias Character =
     , mind : Pool
     , essence : Pool
     , maxCyphers : Int
-    , cyphers : List Cypher
+    , cyphers : List CypherInstance
     , nextRecovery : Int
     }
 
@@ -117,23 +117,26 @@ type PoolType
     | Essence
 
 
-type alias Cypher =
+type alias CypherInstance =
     { name : String
+    , level : Int
     , info : String
     }
 
 
-cypherDecoder : Decoder Cypher
+cypherDecoder : Decoder CypherInstance
 cypherDecoder =
-    Json.Decode.succeed Cypher
+    Json.Decode.succeed CypherInstance
         |> required "name" Json.Decode.string
+        |> required "level" Json.Decode.int
         |> required "info" Json.Decode.string
 
 
-encodeCypher : Cypher -> Json.Encode.Value
+encodeCypher : CypherInstance -> Json.Encode.Value
 encodeCypher c =
     Json.Encode.object
         [ ( "name", Json.Encode.string c.name )
+        , ( "level", Json.Encode.int c.level )
         , ( "info", Json.Encode.string c.info )
         ]
 
