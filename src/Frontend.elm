@@ -172,9 +172,10 @@ body {
 .mr1 { margin-right: 0.5em; }
 .mr2 { margin-right: 1em; }
 .w100 { width: 100%; }
+.bold { font-weight: bold; }
 
 .pool-label { width: 6em; }
-.pool-value { width: 2em; }
+.pool-value { width: 2em; text-align: right; padding-right: 0.5em; }
 .bar { height: 1.2em; width: fit-content; }
 
 """
@@ -266,14 +267,20 @@ viewCharacter model pc =
                 ]
                 []
             , table
-                []
+                [ class "mr2" ]
                 [ viewTier pc.tier
                 , viewPoints model Destiny pc
                 , viewPoints model Experience pc
                 , viewPool model Body pc
                 , viewPool model Mind pc
                 , viewPool model Essence pc
-                , viewRecovery pc
+                ]
+            , div
+                []
+                [ h3 [] [ text "Recovery" ]
+                , List.range 0 3
+                    |> List.map (viewRecovery model pc)
+                    |> div []
                 ]
             , pc.cyphers
                 |> List.indexedMap (viewCypher pc.maxCyphers)
@@ -286,7 +293,7 @@ viewTier : Int -> Html Msg
 viewTier t =
     tr []
         [ td [] [ text "Tier" ]
-        , td [] [ String.fromInt t |> text ]
+        , td [] [ div [ class "pool-value" ] [ String.fromInt t |> text ] ]
         ]
 
 
@@ -313,7 +320,10 @@ viewPoints model p char =
             ]
         , td
             []
-            [ String.fromInt n |> text ]
+            [ div
+                [ class "pool-value" ]
+                [ String.fromInt n |> text ]
+            ]
         , td
             []
             [ if isSt model then
@@ -370,8 +380,8 @@ viewPool model pt char =
     in
     tr
         []
-        [ td [] [ span [ class "pool-label" ] [ text <| Debug.toString pt ] ]
-        , td [] [ span [ class "pool-value" ] [ text <| String.fromInt available ] ]
+        [ td [] [ div [ class "pool-label" ] [ text <| Debug.toString pt ] ]
+        , td [] [ div [ class "pool-value" ] [ text <| String.fromInt available ] ]
         , td []
             [ if isSelected model char then
                 div
@@ -411,9 +421,39 @@ viewBar backgroundColor borderColor value =
             []
 
 
-viewRecovery : Character -> Html Msg
-viewRecovery c =
-    div [] []
+viewRecovery : Model -> Character -> Int -> Html Msg
+viewRecovery model char rec =
+    let
+        name =
+            case rec of
+                0 ->
+                    "1 Action"
+
+                1 ->
+                    "10 minutes"
+
+                2 ->
+                    "1 hour"
+
+                _ ->
+                    "10 hours"
+
+        isNext =
+            char.nextRecovery == rec
+    in
+    div []
+        [ if isSelected model char then
+            button
+                [ Html.Attributes.disabled <| not isNext
+                , onRecklessClick <| TbRecovery char.id rec
+                ]
+                [ text name ]
+
+          else
+            div
+                [ classList [ ( "bold", isNext ) ] ]
+                [ text name ]
+        ]
 
 
 viewCypher : Int -> Int -> Cypher -> Html Msg

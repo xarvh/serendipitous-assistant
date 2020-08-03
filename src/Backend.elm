@@ -2,6 +2,9 @@ module Backend exposing (..)
 
 import Chars exposing (..)
 import Lamdera
+import Random exposing (Seed)
+import Task
+import Time
 import Types exposing (..)
 
 
@@ -28,16 +31,23 @@ app =
 -}
 init : ( Model, Cmd Msg )
 init =
-    ( { characters = [] }
-    , Cmd.none
+    ( { characters =
+            [ { initCharacter | id = 0, name = "Aida" }
+            , { initCharacter | id = 1, name = "Emerald" }
+            , { initCharacter | id = 2, name = "Goat" }
+            , { initCharacter | id = 3, name = "Wolf" }
+            ]
+      , seed = Random.initialSeed 0
+      }
+    , Task.perform OnInitTime (Task.map Time.posixToMillis Time.now)
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Noop ->
-            ( model, Cmd.none )
+        OnInitTime millis ->
+            ( { model | seed = Random.initialSeed millis }, Cmd.none )
 
 
 updateId : Id -> (Character -> Character) -> Model -> ( Model, Cmd Msg )
@@ -105,3 +115,7 @@ updateFromFrontend sessionId clientId msg model =
                     { pool | used = clamp 0 (pool.max - pool.committed) (pool.used + delta) }
             in
             updateId id (updatePool poolType upd) model
+
+        TbRecovery id rec ->
+            -- TODO add cypher
+            updateId id (\char -> { char | nextRecovery = rec + 1 |> modBy 4 }) model

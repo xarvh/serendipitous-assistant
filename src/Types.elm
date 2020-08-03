@@ -3,6 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Chars exposing (..)
+import Random
 import Url exposing (Url)
 
 
@@ -33,11 +34,12 @@ type FrontendMsg
 -}
 type alias BackendModel =
     { characters : List Character
+    , seed : Random.Seed
     }
 
 
 type BackendMsg
-    = Noop
+    = OnInitTime Int
 
 
 {-| To Backend
@@ -48,6 +50,7 @@ type ToBackend
     | TbName Id String
     | TbDeltaPoints Id Points Int
     | TbDeltaPool Id PoolType Int
+    | TbRecovery Id Int
 
 
 {-| To Frontend

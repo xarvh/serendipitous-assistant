@@ -27,9 +27,9 @@ type alias Character =
     }
 
 
-initCharacter : Id -> Character
-initCharacter id =
-    { id = id
+initCharacter : Character
+initCharacter =
+    { id = 0
     , name = ""
     , url = ""
     , tier = 1
