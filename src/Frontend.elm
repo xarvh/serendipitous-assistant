@@ -255,10 +255,14 @@ viewEdit content =
             [ text content ]
         , div
             []
-            [ content
-                |> pcsFromString
-                |> Debug.toString
-                |> text
+            [ case pcsFromString content of
+                Ok _ ->
+                    text "Ok!"
+
+                Err err ->
+                    err
+                        |> Json.Decode.errorToString
+                        |> text
             ]
         ]
 
@@ -332,8 +336,12 @@ viewPoints model p char =
         []
         [ td
             []
-            [ [ Debug.toString p
-              , "points"
+            [ [ case p of
+                    Experience ->
+                        "Experience points"
+
+                    Destiny ->
+                        "Destiny points"
               ]
                 |> String.join " "
                 |> text
@@ -400,7 +408,7 @@ viewPool model pt char =
     in
     tr
         []
-        [ td [] [ div [ class "pool-label" ] [ text <| Debug.toString pt ] ]
+        [ td [] [ div [ class "pool-label" ] [ text <| poolTypeToString pt ] ]
         , td [] [ div [ class "pool-value" ] [ text <| String.fromInt available ] ]
         , td []
             [ if isSelected model char then
@@ -426,6 +434,19 @@ viewPool model pt char =
                 ]
             ]
         ]
+
+
+poolTypeToString : PoolType -> String
+poolTypeToString pt =
+    case pt of
+        Body ->
+            "Body"
+
+        Mind ->
+            "Mind"
+
+        Essence ->
+            "Essence"
 
 
 viewBar : String -> String -> Int -> Html Msg

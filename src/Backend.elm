@@ -163,7 +163,11 @@ cypherTypeToInstanceGenerator : Maybe CypherType -> Generator CypherInstance
 cypherTypeToInstanceGenerator maybeType =
     case maybeType of
         Nothing ->
-            Debug.todo "No list"
+            Random.constant
+                { name = "Error"
+                , level = 0
+                , info = "Some list was empty"
+                }
 
         Just t ->
             Random.map2 (makeCypher t)
