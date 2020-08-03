@@ -353,7 +353,7 @@ viewPool model pt char =
             case pt of
                 Body ->
                     ( char.body
-                    , ( "grey"
+                    , ( "hsl(15,  23%, 30%)"
                       , "hsl(15, 100%, 50%)"
                       , "hsl(15, 100%, 90%)"
                       )
@@ -361,7 +361,7 @@ viewPool model pt char =
 
                 Mind ->
                     ( char.mind
-                    , ( "grey"
+                    , ( "hsl(208,  23%, 30%)"
                       , "hsl(208, 100%, 50%)"
                       , "hsl(208, 100%, 90%)"
                       )
@@ -369,7 +369,7 @@ viewPool model pt char =
 
                 Essence ->
                     ( char.essence
-                    , ( "grey"
+                    , ( "hsl(54,  23%, 30%)"
                       , "hsl(54, 100%, 50%)"
                       , "hsl(54, 100%, 90%)"
                       )
