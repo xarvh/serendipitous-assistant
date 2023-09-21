@@ -129,19 +129,27 @@ updateFromFrontend sessionId clientId msg model =
                     )
 
         TbRemoveCypher id index ->
-            updateId id (\char -> { char | cyphers = list_remove index char.cyphers }) model
+            updateId id (\char -> { char | cyphers = removeCypher index char.cyphers }) model
 
 
-list_remove : Int -> List a -> List a
-list_remove index l =
+removeCypher : Int -> List CypherInstance -> List CypherInstance
+removeCypher index l =
     let
         before =
             List.take index l
-
-        after =
-            List.drop (index + 1) l
     in
-    before ++ after
+    case List.drop index l of
+        [] ->
+            l
+
+        cypher :: after ->
+            if cypher.used then
+                -- Remove the cypher
+                before ++ after
+
+            else
+                -- Set the cypher as used
+                before ++ { cypher | used = True } :: after
 
 
 
@@ -162,6 +170,7 @@ cypherTypeToInstanceGenerator maybeType =
                 { name = "Error"
                 , level = 0
                 , info = "Some list was empty"
+                , used = True
                 }
 
         Just t ->
@@ -181,6 +190,7 @@ makeCypher t d6 rollEffects =
         rollEffects
             |> (::) t.description
             |> String.join "\n"
+    , used = False
     }
 
 

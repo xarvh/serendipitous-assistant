@@ -25,6 +25,7 @@ type alias Character =
     , cyphers : List CypherInstance
     , nextRecovery : Int
     , extraRecovery : Int
+    , pendingRecovery : Int
     }
 
 
@@ -42,6 +43,7 @@ initCharacter =
     , cyphers = []
     , nextRecovery = 0
     , extraRecovery = 0
+    , pendingRecovery = 0
     }
 
 
@@ -61,6 +63,7 @@ characterDecoder =
         |> required "cyphers" (Json.Decode.list cypherDecoder)
         |> required "nextRecovery" Json.Decode.int
         |> required "extraRecovery" Json.Decode.int
+        |> required "pendingRecovery" Json.Decode.int
 
 
 encodeCharacter : Character -> Json.Encode.Value
@@ -78,6 +81,7 @@ encodeCharacter c =
         , ( "cyphers", Json.Encode.list encodeCypher c.cyphers )
         , ( "nextRecovery", Json.Encode.int c.nextRecovery )
         , ( "extraRecovery", Json.Encode.int c.extraRecovery )
+        , ( "pendingRecovery", Json.Encode.int c.pendingRecovery )
         ]
 
 
@@ -123,6 +127,7 @@ type alias CypherInstance =
     { name : String
     , level : Int
     , info : String
+    , used : Bool
     }
 
 
@@ -132,6 +137,7 @@ cypherDecoder =
         |> required "name" Json.Decode.string
         |> required "level" Json.Decode.int
         |> required "info" Json.Decode.string
+        |> required "used" Json.Decode.bool
 
 
 encodeCypher : CypherInstance -> Json.Encode.Value
@@ -140,6 +146,7 @@ encodeCypher c =
         [ ( "name", Json.Encode.string c.name )
         , ( "level", Json.Encode.int c.level )
         , ( "info", Json.Encode.string c.info )
+        , ( "used", Json.Encode.bool c.used )
         ]
 
 

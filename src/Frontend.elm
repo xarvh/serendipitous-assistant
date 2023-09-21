@@ -260,8 +260,8 @@ type alias ViewStatRowArgs =
     }
 
 
-viewBar : String -> String -> Int -> Html Msg
-viewBar backgroundColor borderColor value =
+viewBar : String -> Int -> Html Msg
+viewBar backgroundColor value =
     if value == 0 then
         text ""
 
@@ -288,7 +288,7 @@ viewStatRow args =
             style "width" (String.fromInt n ++ "rem")
     in
     div
-        [ class "row" ]
+        [ class "row mt1" ]
         [ div
             [ w 4 ]
             [ text args.label ]
@@ -317,11 +317,11 @@ viewStatRow args =
             Just bar ->
                 div
                     [ class "row bar"
-                    , style "border" <| bar.usedColor ++ " solid 1px"
+                    , style "border" <| bar.usedColor ++ " solid 2px"
                     ]
-                    [ viewBar bar.committedColor "none" bar.pool.committed
-                    , viewBar bar.availableColor bar.usedColor args.number
-                    , viewBar "none" bar.usedColor bar.pool.used
+                    [ viewBar bar.committedColor bar.pool.committed
+                    , viewBar bar.availableColor args.number
+                    , viewBar bar.usedColor bar.pool.used
                     ]
         ]
 
@@ -427,26 +427,17 @@ viewPool model pt char =
             case pt of
                 Might ->
                     ( char.might
-                    , ( "hsl(15,  23%, 30%)"
-                      , "hsl(15, 100%, 50%)"
-                      , "hsl(15, 100%, 90%)"
-                      )
+                    , ( "hsl(15,  23%, 30%)", "hsl(357, 100%, 72%)", "hsl(15, 100%, 95%)" )
                     )
 
                 Speed ->
                     ( char.speed
-                    , ( "hsl(208,  23%, 30%)"
-                      , "hsl(208, 100%, 50%)"
-                      , "hsl(208, 100%, 90%)"
-                      )
+                    , ( "hsl(54,  23%, 30%)", "hsl(140, 100%, 47%)", "hsl(140, 100%, 95%)" )
                     )
 
                 Intellect ->
                     ( char.intellect
-                    , ( "hsl(54,  23%, 30%)"
-                      , "hsl(54, 100%, 50%)"
-                      , "hsl(54, 100%, 90%)"
-                      )
+                    , ( "hsl(208,  23%, 30%)", "hsl(286, 100%, 50%)", "hsl(286, 100%, 95%)" )
                     )
     in
     viewStatRow
@@ -509,19 +500,43 @@ viewRecovery model char rec =
 
 viewCypher : Model -> Character -> Int -> CypherInstance -> Html Msg
 viewCypher model pc index cypher =
+    let
+        usableSoFar =
+            pc.cyphers
+                |> List.take index
+                |> List.filter (.used >> not)
+                |> List.length
+
+        isExcess =
+            not cypher.used && usableSoFar >= pc.maxCyphers
+    in
     div
         []
         [ if isSelected model pc then
-            button [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ] [ text "-" ]
+            button
+                [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
+                [ if cypher.used then
+                    text "\u{2a09}"
+
+                  else
+                    text "-"
+                ]
 
           else
             text ""
         , span
-            [ classList [ ( "excess", index >= pc.maxCyphers ) ] ]
+            [ classList
+                [ ( "excess", isExcess )
+                , ( "strikeout lowlight", cypher.used )
+                ]
+            ]
             [ text cypher.name ]
         , div
             [ class "tooltip" ]
-            [ div [ class "mb2 bold" ] [ text cypher.name ]
+            [ div
+                [ class "mb2 bold"
+                ]
+                [ text cypher.name ]
             , div [] [ text <| "Level: " ++ String.fromInt cypher.level ]
             , cypher.info
                 |> String.split "\n"

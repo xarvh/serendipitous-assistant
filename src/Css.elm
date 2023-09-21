@@ -104,6 +104,7 @@ button {
 .excess { color: red; }
 .lowlight { color: rgb(150, 150, 150); }
 .styled { font-family: 'Saleha'; font-size: 150%; }
+.strikeout { text-decoration: line-through; }
 
 
 .hidden { visibility: hidden; }
