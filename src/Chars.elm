@@ -16,14 +16,15 @@ type alias Character =
     , name : String
     , url : String
     , tier : Int
-    , dps : Int
     , xps : Int
-    , body : Pool
-    , mind : Pool
-    , essence : Pool
+
+    , might : Pool
+    , speed : Pool
+    , intellect : Pool
     , maxCyphers : Int
     , cyphers : List CypherInstance
     , nextRecovery : Int
+    , extraRecovery : Int
     }
 
 
@@ -33,15 +34,16 @@ initCharacter =
     , name = ""
     , url = ""
     , tier = 1
-    , dps = 0
     , xps = 0
-    , body = initPool
-    , mind = initPool
-    , essence = initPool
+    , might = initPool
+    , speed = initPool
+    , intellect = initPool
     , maxCyphers = 2
     , cyphers = []
     , nextRecovery = 0
+    , extraRecovery = 0
     }
+
 
 
 characterDecoder : Decoder Character
@@ -51,14 +53,14 @@ characterDecoder =
         |> required "name" Json.Decode.string
         |> required "url" Json.Decode.string
         |> required "tier" Json.Decode.int
-        |> required "dps" Json.Decode.int
         |> required "xps" Json.Decode.int
-        |> required "body" poolDecoder
-        |> required "mind" poolDecoder
-        |> required "essence" poolDecoder
+        |> required "might" poolDecoder
+        |> required "speed" poolDecoder
+        |> required "intellect" poolDecoder
         |> required "maxCyphers" Json.Decode.int
         |> required "cyphers" (Json.Decode.list cypherDecoder)
         |> required "nextRecovery" Json.Decode.int
+        |> required "extraRecovery" Json.Decode.int
 
 
 encodeCharacter : Character -> Json.Encode.Value
@@ -68,14 +70,14 @@ encodeCharacter c =
         , ( "name", Json.Encode.string c.name )
         , ( "url", Json.Encode.string c.url )
         , ( "tier", Json.Encode.int c.tier )
-        , ( "dps", Json.Encode.int c.dps )
         , ( "xps", Json.Encode.int c.xps )
-        , ( "body", encodePool c.body )
-        , ( "mind", encodePool c.mind )
-        , ( "essence", encodePool c.essence )
+        , ( "might", encodePool c.might )
+        , ( "speed", encodePool c.speed )
+        , ( "intellect", encodePool c.intellect )
         , ( "maxCyphers", Json.Encode.int c.maxCyphers )
         , ( "cyphers", Json.Encode.list encodeCypher c.cyphers )
         , ( "nextRecovery", Json.Encode.int c.nextRecovery )
+        , ( "extraRecovery", Json.Encode.int c.extraRecovery )
         ]
 
 
@@ -112,9 +114,9 @@ encodePool c =
 
 
 type PoolType
-    = Body
-    | Mind
-    | Essence
+    = Might
+    | Speed
+    | Intellect
 
 
 type alias CypherInstance =
@@ -143,4 +145,3 @@ encodeCypher c =
 
 type Points
     = Experience
-    | Destiny

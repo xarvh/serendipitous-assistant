@@ -37,8 +37,6 @@ init =
     ( { characters =
             [ { initCharacter | id = 0, name = "Aida" }
             , { initCharacter | id = 1, name = "Emerald" }
-            , { initCharacter | id = 2, name = "Goat" }
-            , { initCharacter | id = 3, name = "Wolf" }
             ]
       , seed = Random.initialSeed 0
       }
@@ -61,14 +59,14 @@ updateId id upd model =
 updatePool : PoolType -> (Pool -> Pool) -> Character -> Character
 updatePool pt upd c =
     case pt of
-        Body ->
-            { c | body = upd c.body }
+        Might ->
+            { c | might = upd c.might }
 
-        Mind ->
-            { c | mind = upd c.mind }
+        Speed ->
+            { c | speed = upd c.speed }
 
-        Essence ->
-            { c | essence = upd c.essence }
+        Intellect ->
+            { c | intellect = upd c.intellect }
 
 
 updateIfId : Id -> (Character -> Character) -> Character -> Character
@@ -104,9 +102,6 @@ updateFromFrontend sessionId clientId msg model =
             let
                 upd char =
                     case points of
-                        Destiny ->
-                            { char | dps = char.dps + delta }
-
                         Experience ->
                             { char | xps = char.xps + delta }
             in
@@ -115,7 +110,7 @@ updateFromFrontend sessionId clientId msg model =
         TbDeltaPool id poolType delta ->
             let
                 upd pool =
-                    { pool | used = clamp 0 (pool.max - pool.committed) (pool.used + delta) }
+                    { pool | used = clamp 0 (pool.max - pool.committed) (pool.used - delta) }
             in
             updateId id (updatePool poolType upd) model
 
