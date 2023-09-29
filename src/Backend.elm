@@ -111,25 +111,64 @@ updateFromFrontend sessionId clientId msg model =
             let
                 upd pool =
                     { pool | used = clamp 0 (pool.max - pool.committed) (pool.used - delta) }
+
+                updateRecovery char =
+                    if delta > 0 then
+                        { char | pendingRecovery = max 0 (char.pendingRecovery - delta) }
+
+                    else
+                        char
             in
-            updateId id (updatePool poolType upd) model
+            updateId id (updateRecovery >> updatePool poolType upd) model
 
         TbRecovery id rec ->
             let
-                ( cypher, seed ) =
-                    Random.step cypherGenerator model.seed
+                ( d6, seed1 ) =
+                    Random.step (Random.int 1 6) model.seed
+
+                ( cypher, seed2 ) =
+                    Random.step cypherGenerator seed1
             in
-            { model | seed = seed }
+            { model | seed = seed2 }
                 |> updateId id
                     (\char ->
-                        { char
-                            | nextRecovery = rec + 1 |> modBy 4
-                            , cyphers = char.cyphers ++ [ cypher ]
-                        }
+                        { char | nextRecovery = rec + 1 |> modBy 4 }
+                            |> maybeAddCypher cypher rec
+                            |> maybeAddRecovery d6
                     )
 
         TbRemoveCypher id index ->
             updateId id (\char -> { char | cyphers = removeCypher index char.cyphers }) model
+
+
+maybeAddCypher : CypherInstance -> Int -> Character -> Character
+maybeAddCypher cypher recoveryId char =
+    if recoveryId == 0 || recoveryId == 2 then
+        { char | cyphers = char.cyphers ++ [ cypher ] }
+
+    else
+        char
+
+
+maybeAddRecovery : Int -> Character -> Character
+maybeAddRecovery d6 char =
+    let
+        totalRecoverable =
+            d6 + char.tier + char.extraRecovery + char.pendingRecovery
+
+        resetPool pool =
+            { pool | used = 0 }
+    in
+    if char.might.used + char.speed.used + char.intellect.used > totalRecoverable then
+        { char | pendingRecovery = totalRecoverable }
+
+    else
+        { char
+            | pendingRecovery = 0
+            , might = resetPool char.might
+            , speed = resetPool char.speed
+            , intellect = resetPool char.intellect
+        }
 
 
 removeCypher : Int -> List CypherInstance -> List CypherInstance

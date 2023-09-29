@@ -65,6 +65,7 @@ button {
   min-height: 8em;
   height: fit-content;
   background-color: rgb(223, 224, 201);
+  border-radius: 4px;
 }
 
 .media-layout {
@@ -85,6 +86,7 @@ button {
 /* atomic */
 
 .justifyCenter { display: flex; justify-content: center; }
+.justifyBetween { display: flex; justify-content: space-between; }
 .alignCenter { display: flex; align-items: center; }
 .row { display: flex; }
 .w100 { width: 100%; }

@@ -163,7 +163,7 @@ updateFromBackend msg model =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Serendepitous Assistant"
+    { title = "Mercy of the Icons - Assistant"
     , body =
         [ case page model of
             PageEdit ->
@@ -181,8 +181,6 @@ view model =
                         |> (\( myChar, otherChars ) -> myChar ++ otherChars)
                         |> List.map (viewCharacter model)
                         |> div [ class "mr2" ]
-
-                    --                     , viewDisplayCypher model.displayCypher
                     ]
         , node "style"
             []
@@ -286,9 +284,17 @@ viewStatRow args =
 
         w n =
             style "width" (String.fromInt n ++ "rem")
+
+        disableAdd =
+            case args.bar of
+                Nothing ->
+                    False
+
+                Just bar ->
+                    bar.pool.used == 0
     in
     div
-        [ class "row mt1" ]
+        [ class "row mb1" ]
         [ div
             [ w 4 ]
             [ text args.label ]
@@ -306,6 +312,7 @@ viewStatRow args =
             [ text "-" ]
         , button
             [ oc args.onAdd
+            , HA.disabled disableAdd
             , w 1
             , class "mr2"
             ]
@@ -380,7 +387,7 @@ viewCharacter model pc =
                 , class "portrait mr2"
                 ]
                 []
-            , table
+            , div
                 [ class "mr2" ]
                 [ viewTier pc.tier
                 , viewPoints model Experience pc
@@ -390,19 +397,26 @@ viewCharacter model pc =
                 ]
             ]
         , div
-            [ class "mt2 mr2 media-layout"
+            [ class "mt2 mr2 row justifyBetween"
             ]
             [ div
-                [ class "mr1" ]
-                [ List.range 0 3
-                    |> List.map (viewRecovery model pc)
-                    |> div []
-                ]
-            , div
-                [ class "ml2" ]
+                [ class "" ]
                 (pc.cyphers
                     |> List.indexedMap (viewCypher model pc)
                 )
+            , div
+                [ class "mr1" ]
+                [ div
+                    [ classList [ ( "hidden", pc.pendingRecovery == 0 ) ]
+                    , class "mb1"
+                    ]
+                    [ pc.pendingRecovery |> String.fromInt |> text
+                    , text " to allocate"
+                    ]
+                , List.range 0 3
+                    |> List.map (viewRecovery model pc)
+                    |> div []
+                ]
             ]
         ]
 
@@ -439,11 +453,18 @@ viewPool model pt char =
                     ( char.intellect
                     , ( "hsl(208,  23%, 30%)", "hsl(286, 100%, 50%)", "hsl(286, 100%, 95%)" )
                     )
+
+        onAdd =
+            if char.pendingRecovery > 0 && pool.used > 0 then
+                Just <| TbDeltaPool char.id pt 1
+
+            else
+                Nothing
     in
     viewStatRow
         { label = poolTypeToString pt
         , number = pool.max - pool.used - pool.committed
-        , onAdd = Just <| TbDeltaPool char.id pt 1
+        , onAdd = onAdd
         , onUse = Just <| TbDeltaPool char.id pt -1
         , bar =
             Just
@@ -516,7 +537,7 @@ viewCypher model pc index cypher =
             button
                 [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
                 [ if cypher.used then
-                    text "\u{2a09}"
+                    text "⨉"
 
                   else
                     text "-"
