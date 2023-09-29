@@ -143,7 +143,7 @@ updateFromFrontend sessionId clientId msg model =
 
 maybeAddCypher : CypherInstance -> Int -> Character -> Character
 maybeAddCypher cypher recoveryId char =
-    if recoveryId == 0 || recoveryId == 2 then
+    if recoveryId == 2 || recoveryId == 3 then
         { char | cyphers = char.cyphers ++ [ cypher ] }
 
     else
