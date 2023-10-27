@@ -1,4 +1,4 @@
-module Frontend exposing (..)
+port module Frontend exposing (..)
 
 import Browser
 import Browser.Navigation
@@ -10,8 +10,17 @@ import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode
 import Lamdera
+import List.Extra
 import Types exposing (..)
 import Url exposing (Url)
+
+
+port xarvh_elm_notifications_to_js : { title : String, body : String, icon : String } -> Cmd msg
+
+
+notificationCmd : { title : String, body : String } -> Cmd msg
+notificationCmd { title, body } =
+    xarvh_elm_notifications_to_js { body = body, title = title, icon = "" }
 
 
 {-| Main
@@ -147,14 +156,41 @@ updateFromBackend : ToFrontend -> Model -> ( Model, Cmd Msg )
 updateFromBackend msg model =
     case msg of
         TfCharacters pcs ->
-            { model
+            ( { model
                 | characters = pcs
                 , edit =
                     pcs
                         |> Json.Encode.list encodeCharacter
                         |> Json.Encode.encode 2
-            }
-                |> noCmd
+              }
+            , makeNotifications model pcs
+                |> List.map notificationCmd
+                |> Cmd.batch
+            )
+
+
+
+-- Notifications
+
+
+makeNotifications : Model -> List Character -> List { title : String, body : String }
+makeNotifications model newCharacters =
+    let
+        xpIncreasedNotification newChar =
+            case List.Extra.find (\oldPc -> oldPc.id == newChar.id) model.characters of
+                Nothing ->
+                    Nothing
+
+                Just oldChar ->
+                    if newChar.xps > oldChar.xps then
+                        Just { title = newChar.name, body = "+1 XP!" }
+
+                    else
+                        Nothing
+    in
+    newCharacters
+        |> List.filter (isSelected model)
+        |> List.filterMap xpIncreasedNotification
 
 
 

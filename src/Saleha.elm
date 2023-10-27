@@ -1,6 +1,9 @@
 module Saleha exposing (..)
 
 
+-- TODO use Lamdera's <head> injection instead of this horror.
+
+
 salehaRegular =
     """
 AAEAAAASAQAABAAgRFNJRwAAAAEAAIngAAAACEdERUYA9QCQAACD9AAAAChHUE9T15nCIgAAhBwA
