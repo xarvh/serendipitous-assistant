@@ -4,7 +4,7 @@ import Browser
 import Browser.Navigation
 import Chars exposing (..)
 import Css
-import Html exposing (..)
+import Html exposing (Html)
 import Html.Attributes as HA exposing (class, classList, style)
 import Html.Events exposing (onClick)
 import Json.Decode
@@ -209,19 +209,19 @@ view model =
                 viewWhoAreYou model
 
             _ ->
-                div
+                Html.div
                     [ class "justifyCenter" ]
                     [ model.characters
                         |> List.sortBy .name
                         |> List.partition (isSelected model)
                         |> (\( myChar, otherChars ) -> myChar ++ otherChars)
                         |> List.map (viewCharacter model)
-                        |> div [ class "mr2" ]
+                        |> Html.div [ class "mr2" ]
                     ]
-        , node "style"
+        , Html.node "style"
             []
             [ Html.text Css.css ]
-        , node "link"
+        , Html.node "link"
             [ HA.href "https://fonts.googleapis.com/css2?family=Electrolize&display=swap"
             , HA.rel "stylesheet"
             ]
@@ -253,13 +253,13 @@ pageTitle model =
 
 viewWhoAreYou : Model -> Html Msg
 viewWhoAreYou model =
-    div
+    Html.div
         []
-        [ h3 [] [ text "Who are you?" ]
+        [ Html.h3 [] [ Html.text "Who are you?" ]
         , model.characters
             |> List.sortBy .name
-            |> List.map (\c -> button [ onClick <| OnSelectCharacter c.id ] [ text c.name ])
-            |> div []
+            |> List.map (\c -> Html.button [ onClick <| OnSelectCharacter c.id ] [ Html.text c.name ])
+            |> Html.div []
         ]
 
 
@@ -274,24 +274,24 @@ onRecklessClick tb =
 
 viewEdit : String -> Html Msg
 viewEdit content =
-    div
+    Html.div
         []
-        [ textarea
+        [ Html.textarea
             [ Html.Events.onInput OnTextareaInput
             , style "width" "100%"
             , style "height" "90vh"
             ]
-            [ text content ]
-        , div
+            [ Html.text content ]
+        , Html.div
             []
             [ case pcsFromString content of
                 Ok _ ->
-                    text "Ok!"
+                    Html.text "Ok!"
 
                 Err err ->
                     err
                         |> Json.Decode.errorToString
-                        |> text
+                        |> Html.text
             ]
         ]
 
@@ -318,10 +318,10 @@ type alias ViewStatRowArgs =
 viewBar : String -> Int -> Html Msg
 viewBar backgroundColor value =
     if value == 0 then
-        text ""
+        Html.text ""
 
     else
-        div
+        Html.div
             [ style "width" <| String.fromInt value ++ "em"
             , style "background-color" backgroundColor
             ]
@@ -350,36 +350,36 @@ viewStatRow args =
                 Just bar ->
                     bar.pool.used == 0
     in
-    div
+    Html.div
         [ class "row mb1" ]
-        [ div
+        [ Html.div
             [ w 4 ]
-            [ text args.label ]
-        , div
+            [ Html.text args.label ]
+        , Html.div
             [ w 2
             , class "textRight"
             , class "mr2"
             ]
-            [ text (String.fromInt args.number) ]
-        , button
+            [ Html.text (String.fromInt args.number) ]
+        , Html.button
             [ oc args.onUse
             , HA.disabled (args.number < 1)
             , w 1
             ]
-            [ text "-" ]
-        , button
+            [ Html.text "-" ]
+        , Html.button
             [ oc args.onAdd
             , HA.disabled disableAdd
             , w 1
             , class "mr2"
             ]
-            [ text "+" ]
+            [ Html.text "+" ]
         , case args.bar of
             Nothing ->
-                text ""
+                Html.text ""
 
             Just bar ->
-                div
+                Html.div
                     [ class "row bar"
                     , style "border" <| bar.usedColor ++ " solid 2px"
                     ]
@@ -430,21 +430,21 @@ viewPoints model p char =
 
 viewCharacter : Model -> Character -> Html Msg
 viewCharacter model pc =
-    div
+    Html.div
         [ class "card" ]
-        [ div
+        [ Html.div
             [ class "mb1 styled"
             ]
-            [ text pc.name ]
-        , div
+            [ Html.text pc.name ]
+        , Html.div
             [ class "media-layout"
             ]
-            [ img
+            [ Html.img
                 [ HA.src pc.url
                 , class "portrait mr2"
                 ]
                 []
-            , div
+            , Html.div
                 [ class "mr2" ]
                 [ viewTier pc.tier
                 , viewPoints model Experience pc
@@ -453,26 +453,26 @@ viewCharacter model pc =
                 , viewPool model Intellect pc
                 ]
             ]
-        , div
+        , Html.div
             [ class "mt2 mr2 row justifyBetween"
             ]
-            [ div
+            [ Html.div
                 [ class "" ]
                 (pc.cyphers
                     |> List.indexedMap (viewCypher model pc)
                 )
-            , div
+            , Html.div
                 [ class "mr1" ]
-                [ div
+                [ Html.div
                     [ classList [ ( "hidden", pc.pendingRecovery == 0 ) ]
                     , class "mb1"
                     ]
-                    [ pc.pendingRecovery |> String.fromInt |> text
-                    , text " to allocate"
+                    [ pc.pendingRecovery |> String.fromInt |> Html.text
+                    , Html.text " to allocate"
                     ]
                 , List.range 0 3
                     |> List.map (viewRecovery model pc)
-                    |> div []
+                    |> Html.div []
                 ]
             ]
         ]
@@ -556,23 +556,23 @@ viewRecovery model char rec =
         isClickable =
             isNext && isSelected model char
     in
-    div [ class "alignCenter" ]
-        [ button
+    Html.div [ class "alignCenter" ]
+        [ Html.button
             [ HA.disabled <| not isClickable
             , onRecklessClick <| TbRecovery char.id rec
             , class "mr1"
             , classList [ ( "hidden", not isClickable ) ]
             ]
-            [ text "D6 + "
+            [ Html.text "D6 + "
             , char.tier
                 + char.extraRecovery
                 |> String.fromInt
-                |> text
+                |> Html.text
             ]
-        , div
+        , Html.div
             [ classList [ ( "lowlight", not isNext ) ]
             ]
-            [ text name ]
+            [ Html.text name ]
         ]
 
 
@@ -588,37 +588,37 @@ viewCypher model pc index cypher =
         isExcess =
             not cypher.used && usableSoFar >= pc.maxCyphers
     in
-    div
+    Html.div
         []
         [ if isSelected model pc then
-            button
+            Html.button
                 [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
                 [ if cypher.used then
-                    text "⨉"
+                    Html.text "⨉"
 
                   else
-                    text "-"
+                    Html.text "-"
                 ]
 
           else
-            text ""
-        , span
+            Html.text ""
+        , Html.span
             [ classList
                 [ ( "excess", isExcess )
                 , ( "strikeout lowlight", cypher.used )
                 ]
             ]
-            [ text cypher.name ]
-        , div
+            [ Html.text cypher.name ]
+        , Html.div
             [ class "tooltip" ]
-            [ div
+            [ Html.div
                 [ class "mb2 bold"
                 ]
-                [ text cypher.name ]
-            , div [] [ text <| "Level: " ++ String.fromInt cypher.level ]
+                [ Html.text cypher.name ]
+            , Html.div [] [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
             , cypher.info
                 |> String.split "\n"
-                |> List.map (\s -> p [] [ text s ])
-                |> div []
+                |> List.map (\s -> Html.p [] [ Html.text s ])
+                |> Html.div []
             ]
         ]
