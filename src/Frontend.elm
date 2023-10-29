@@ -347,13 +347,13 @@ viewBar backgroundColor value =
 viewStatRow : ViewStatRowArgs -> Html Msg
 viewStatRow args =
     let
-        oc maybeOn =
+        oc maybeOn attrs children =
             case maybeOn of
                 Nothing ->
-                    class "hidden"
+                    Html.text ""
 
                 Just msg ->
-                    onRecklessClick msg
+                    Html.button (onRecklessClick msg :: attrs) children
 
         w n =
             style "width" (String.fromInt n ++ "rem")
@@ -368,26 +368,34 @@ viewStatRow args =
     in
     Html.div
         [ class "row mb1" ]
-        [ Html.div
+        [ Html.text ""
+        , Html.div
             [ w 4 ]
             [ Html.text args.label ]
         , Html.div
-            [ w 2
-            , class "textRight"
-            , class "mr2"
+            [ w 3
+            , class "textRight mr2 nowrap"
             ]
-            [ Html.text (String.fromInt args.number) ]
-        , Html.button
-            [ oc args.onUse
-            , HA.disabled (args.number < 1)
+            [ Html.text (String.fromInt args.number)
+            , case args.bar of
+                Nothing ->
+                    Html.text ""
+
+                Just bar ->
+                    Html.span
+                        [ class "small lowlight" ]
+                        [ Html.text " / "
+                        , Html.text (String.fromInt bar.pool.max)
+                        ]
+            ]
+        , oc args.onUse
+            [ HA.disabled (args.number < 1)
             , w 1
             ]
             [ Html.text "-" ]
-        , Html.button
-            [ oc args.onAdd
-            , HA.disabled disableAdd
+        , oc args.onAdd
+            [ HA.disabled disableAdd
             , w 1
-            , class "mr2"
             ]
             [ Html.text "+" ]
         , case args.bar of
@@ -396,7 +404,7 @@ viewStatRow args =
 
             Just bar ->
                 Html.div
-                    [ class "row bar"
+                    [ class "row bar wideOnly ml2"
                     , style "border" <| bar.usedColor ++ " solid 2px"
                     ]
                     [ viewBar bar.committedColor bar.pool.committed
@@ -464,25 +472,36 @@ viewCharacter model pc =
             ]
             [ Html.text pc.name ]
         , Html.div
-            [ class "media-layout"
-            ]
+            [ class "row wrap" ]
             [ Html.img
                 [ HA.src pc.url
-                , class "portrait mr2"
+                , class "portrait mb1 mr1"
                 ]
                 []
             , Html.div
-                [ class "mr2" ]
-                [ viewTier pc.tier
-                , viewPoints model Experience pc
+                []
+                [ viewPoints model Experience pc
+                , if pc.pendingRecovery == 0 then
+                    Html.text ""
+
+                  else
+                    Html.div
+                        [ class "excess" ]
+                        [ viewStatRow
+                            { label = "recovered"
+                            , number = pc.pendingRecovery
+                            , bar = Nothing
+                            , onAdd = Nothing
+                            , onUse = Nothing
+                            }
+                        ]
                 , viewPool model Might pc
                 , viewPool model Speed pc
                 , viewPool model Intellect pc
                 ]
             ]
         , Html.div
-            [ class "mt2 mr2 row justifyBetween"
-            ]
+            [ class "row wrap" ]
             [ Html.div
                 []
                 (List.concat
@@ -491,15 +510,8 @@ viewCharacter model pc =
                     ]
                 )
             , Html.div
-                [ class "mr1" ]
-                [ Html.div
-                    [ classList [ ( "hidden", pc.pendingRecovery == 0 ) ]
-                    , class "mb1"
-                    ]
-                    [ pc.pendingRecovery |> String.fromInt |> Html.text
-                    , Html.text " to allocate"
-                    ]
-                , List.range 0 3
+                []
+                [ List.range 0 3
                     |> List.map (viewRecovery model pc)
                     |> Html.div []
                 ]
@@ -618,36 +630,55 @@ viewCypher model pc index cypher =
             not cypher.used && usableSoFar >= pc.maxCyphers
     in
     Html.div
-        []
+        [ class "row mb1" ]
         [ if isSelected model pc then
-            Html.button
-                [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
-                [ if cypher.used then
-                    Html.text "⨉"
+            Html.div
+                []
+                [ Html.button
+                    [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
+                    [ if cypher.used then
+                        Html.text "⨉"
 
-                  else
-                    Html.text "-"
+                      else
+                        Html.text "-"
+                    ]
                 ]
 
           else
             Html.text ""
-        , Html.span
-            [ classList
-                [ ( "excess", isExcess )
-                , ( "strikeout lowlight", cypher.used )
-                ]
-            ]
-            [ Html.text cypher.name ]
-        , Html.div
-            [ class "tooltip" ]
-            [ Html.div
-                [ class "mb2 bold"
+        , Html.details
+            []
+            [ Html.summary
+                [ classList
+                    [ ( "excess", isExcess )
+                    , ( "strikeout lowlight", cypher.used )
+                    ]
                 ]
                 [ Html.text cypher.name ]
-            , Html.div [] [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
-            , cypher.info
-                |> String.split "\n"
-                |> List.map (\s -> Html.p [] [ Html.text s ])
-                |> Html.div []
+            , Html.div
+                [ class "ml2 mb2" ]
+                [ Html.div
+                    [ class "mb1 bold" ]
+                    [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
+                , cypher.info
+                    |> String.split "\n"
+                    |> List.map (\s -> Html.div [] [ Html.text s ])
+                    |> Html.div []
+                ]
             ]
+
+        {-
+           , Html.div
+               [ class "tooltip" ]
+               [ Html.div
+                   [ class "mb2 bold"
+                   ]
+                   [ Html.text cypher.name ]
+               , Html.div [] [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
+               , cypher.info
+                   |> String.split "\n"
+                   |> List.map (\s -> Html.p [] [ Html.text s ])
+                   |> Html.div []
+               ]
+        -}
         ]
