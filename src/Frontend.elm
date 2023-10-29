@@ -199,7 +199,7 @@ makeNotifications model newCharacters =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Mercy of the Icons - Assistant"
+    { title = pageTitle model ++ " - Mercy of the Icons"
     , body =
         [ case page model of
             PageEdit ->
@@ -228,6 +228,27 @@ view model =
             []
         ]
     }
+
+
+pageTitle : Model -> String
+pageTitle model =
+    case page model of
+        PageChar id ->
+            case List.Extra.find (\char -> char.id == id) model.characters of
+                Nothing ->
+                    "Invalid character id =("
+
+                Just char ->
+                    char.name
+
+        PageSt ->
+            "Storyteller"
+
+        PageEdit ->
+            "Edit"
+
+        PagePick ->
+            "Pick your character"
 
 
 viewWhoAreYou : Model -> Html Msg
