@@ -236,7 +236,7 @@ pageTitle model =
         PageChar id ->
             case List.Extra.find (\char -> char.id == id) model.characters of
                 Nothing ->
-                    "Invalid character id =("
+                    "Player"
 
                 Just char ->
                     char.name
