@@ -5,6 +5,17 @@ import Saleha
 
 css =
     """
+details summary {
+  cursor: pointer;
+  transition: margin 150ms ease-in-out;
+}
+
+details[open] summary {
+  margin-bottom: 0.5em;
+}
+
+
+
 @font-face {
     font-family: 'Saleha';
     src: url(data:font/ttf;base64,""" ++ Saleha.salehaRegular ++ """) format('truetype');
@@ -61,8 +72,8 @@ button {
 /* Media */
 
 .portrait {
-  width: 8em;
-  min-height: 8em;
+  width: 154px;
+  min-height: 154px;
   height: fit-content;
   background-color: rgb(223, 224, 201);
   border-radius: 4px;
@@ -77,9 +88,6 @@ button {
   .media-layout {
       flex-direction: column;
   }
-  .portrait {
-      display: none;
-  }
 }
 
 
@@ -89,6 +97,7 @@ button {
 .justifyBetween { display: flex; justify-content: space-between; }
 .alignCenter { display: flex; align-items: center; }
 .row { display: flex; }
+.wrap { flex-wrap: wrap; }
 .w100 { width: 100%; }
 
 .mt1 { margin-top: 0.5em; }
@@ -107,9 +116,21 @@ button {
 .lowlight { color: rgb(150, 150, 150); }
 .styled { font-family: 'Saleha'; font-size: 150%; }
 .strikeout { text-decoration: line-through; }
-
+.small { font-size: 70%; }
+.nowrap { text-wrap: nowrap; }
 
 .hidden { visibility: hidden; }
+
+@media (width < 800px) {
+  .wideOnly {
+    display: none;
+  }
+}
+
+
+
+
+
 
 
 /* specific */
