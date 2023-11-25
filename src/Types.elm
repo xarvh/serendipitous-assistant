@@ -51,6 +51,7 @@ type ToBackend
     | TbDeltaPoints Id Points Int
     | TbDeltaPool Id PoolType Int
     | TbRecovery Id Int
+    | TbAddCypher Id
     | TbRemoveCypher Id Int
 
 

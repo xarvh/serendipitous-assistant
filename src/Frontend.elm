@@ -187,10 +187,26 @@ makeNotifications model newCharacters =
 
                     else
                         Nothing
+
+        cypherIncreasedNotification newChar =
+            case List.Extra.find (\oldPc -> oldPc.id == newChar.id) model.characters of
+                Nothing ->
+                    Nothing
+
+                Just oldChar ->
+                    if List.length newChar.cyphers > List.length oldChar.cyphers then
+                        Just { title = newChar.name, body = "+1 Cypher!" }
+
+                    else
+                        Nothing
+
+        chars =
+            List.filter (isSelected model) newCharacters
     in
-    newCharacters
-        |> List.filter (isSelected model)
-        |> List.filterMap xpIncreasedNotification
+    List.concat
+        [ List.filterMap xpIncreasedNotification chars
+        , List.filterMap cypherIncreasedNotification chars
+        ]
 
 
 
@@ -428,6 +444,17 @@ viewPoints model p char =
         }
 
 
+maybeViewAddCypher : Model -> Character -> Html Msg
+maybeViewAddCypher model pc =
+    if isSt model then
+        Html.button
+            [ onRecklessClick <| TbAddCypher pc.id ]
+            [ Html.text "+" ]
+
+    else
+        Html.text ""
+
+
 viewCharacter : Model -> Character -> Html Msg
 viewCharacter model pc =
     Html.div
@@ -457,9 +484,11 @@ viewCharacter model pc =
             [ class "mt2 mr2 row justifyBetween"
             ]
             [ Html.div
-                [ class "" ]
-                (pc.cyphers
-                    |> List.indexedMap (viewCypher model pc)
+                []
+                (List.concat
+                    [ List.indexedMap (viewCypher model pc) pc.cyphers
+                    , [ maybeViewAddCypher model pc ]
+                    ]
                 )
             , Html.div
                 [ class "mr1" ]

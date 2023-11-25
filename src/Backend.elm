@@ -137,6 +137,14 @@ updateFromFrontend sessionId clientId msg model =
                             |> maybeAddRecovery d6
                     )
 
+        TbAddCypher id ->
+            let
+                ( cypher, seed1 ) =
+                    Random.step cypherGenerator model.seed
+            in
+            { model | seed = seed1 }
+                |> updateId id (\char -> { char | cyphers = char.cyphers ++ [ cypher ] })
+
         TbRemoveCypher id index ->
             updateId id (\char -> { char | cyphers = removeCypher index char.cyphers }) model
 
