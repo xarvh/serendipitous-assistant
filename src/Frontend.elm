@@ -661,6 +661,8 @@ viewCypher model pc index cypher =
                     [ class "mb1 bold" ]
                     [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
                 , cypher.info
+                    |> String.replace "\n" " "
+                    |> String.replace ". " ".\n"
                     |> String.split "\n"
                     |> List.map (\s -> Html.div [] [ Html.text s ])
                     |> Html.div []

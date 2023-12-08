@@ -34,12 +34,13 @@ button {
 
 
 .card {
-   background-color: #101026;
-   border: 1px solid #000;
-   border-radius: 16px;
-   padding: 1em;
-   margin: 1em;
- }
+  background-color: #101026;
+  border: 1px solid #000;
+  border-radius: 16px;
+  padding: 1em;
+  margin: 1em;
+  max-width: 600px;
+}
 
 
 
@@ -138,5 +139,6 @@ button {
 .pool-label { width: 6em; }
 .pool-value { width: 2em; text-align: right; padding-right: 0.5em; }
 .bar { height: 1.2em; width: fit-content; }
+.cypher-info { max-width: 500px; }
 
 """
