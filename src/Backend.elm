@@ -246,4 +246,4 @@ rollToGenerator roll =
     roll.options
         |> List.map (\option -> ( toFloat option.weight, Random.constant option.effect ))
         |> Random.Extra.frequency ( 0, Random.constant "" )
-        |> Random.map (\effect -> roll.name ++ " " ++ effect)
+        |> Random.map (\effect -> roll.name ++ ": " ++ effect)

@@ -503,18 +503,18 @@ viewCharacter model pc =
         , Html.div
             [ class "row wrap" ]
             [ Html.div
+                [ class "mr2 mb2" ]
+                [ List.range 0 3
+                    |> List.map (viewRecovery model pc)
+                    |> Html.div []
+                ]
+            , Html.div
                 []
                 (List.concat
                     [ List.indexedMap (viewCypher model pc) pc.cyphers
                     , [ maybeViewAddCypher model pc ]
                     ]
                 )
-            , Html.div
-                []
-                [ List.range 0 3
-                    |> List.map (viewRecovery model pc)
-                    |> Html.div []
-                ]
             ]
         ]
 
