@@ -480,7 +480,8 @@ viewCharacter model pc =
                 []
             , Html.div
                 []
-                [ viewPoints model Experience pc
+                [ viewTier pc.tier
+                , viewPoints model Experience pc
                 , if pc.pendingRecovery == 0 then
                     Html.text ""
 
