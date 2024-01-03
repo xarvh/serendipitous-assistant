@@ -96,6 +96,7 @@ button {
 .justifyCenter { display: flex; justify-content: center; }
 .justifyBetween { display: flex; justify-content: space-between; }
 .alignCenter { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
 .row { display: flex; }
 .wrap { flex-wrap: wrap; }
 .w100 { width: 100%; }

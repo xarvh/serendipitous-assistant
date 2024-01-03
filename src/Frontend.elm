@@ -270,12 +270,12 @@ pageTitle model =
 viewWhoAreYou : Model -> Html Msg
 viewWhoAreYou model =
     Html.div
-        []
+        [ class "mt2 ml2" ]
         [ Html.h3 [] [ Html.text "Who are you?" ]
         , model.characters
             |> List.sortBy .name
-            |> List.map (\c -> Html.button [ onClick <| OnSelectCharacter c.id ] [ Html.text c.name ])
-            |> Html.div []
+            |> List.map (\c -> Html.div [ class "mb1" ] [ Html.button [ onClick <| OnSelectCharacter c.id ] [ Html.text c.name ]])
+            |> Html.div [ class "col" ]
         ]
 
 
