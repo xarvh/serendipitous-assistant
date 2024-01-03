@@ -132,7 +132,12 @@ updateFromFrontend sessionId clientId msg model =
             { model | seed = seed2 }
                 |> updateId id
                     (\char ->
-                        { char | nextRecovery = rec + 1 |> modBy 4 }
+                        (if rec == -1 then
+                            char
+
+                         else
+                            { char | nextRecovery = rec + 1 |> modBy 4 }
+                        )
                             |> maybeAddCypher cypher rec
                             |> maybeAddRecovery d6
                     )

@@ -505,7 +505,15 @@ viewCharacter model pc =
             [ class "row wrap" ]
             [ Html.div
                 [ class "mr2 mb2" ]
-                [ List.range 0 3
+                [ let
+                    start =
+                        if isSt model then
+                            -1
+
+                        else
+                            0
+                  in
+                  List.range start 3
                     |> List.map (viewRecovery model pc)
                     |> Html.div []
                 ]
@@ -589,14 +597,17 @@ viewRecovery model char rec =
                 2 ->
                     "1 hour"
 
-                _ ->
+                3 ->
                     "10 hours"
+
+                _ ->
+                    "Free recovery"
 
         isNext =
             char.nextRecovery == rec
 
         isClickable =
-            isNext && isSelected model char
+            (isSt model && rec == -1) || (isNext && isSelected model char)
     in
     Html.div [ class "alignCenter" ]
         [ Html.button
