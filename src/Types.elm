@@ -53,6 +53,7 @@ type ToBackend
     | TbRecovery Id Int
     | TbAddCypher Id
     | TbRemoveCypher Id Int
+    | TbToggleLevity Id Bool
 
 
 {-| To Frontend

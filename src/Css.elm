@@ -32,6 +32,10 @@ button {
   min-width: 2em;
 }
 
+input[type='checkbox'] {
+  margin: 0;
+}
+
 
 .card {
    background-color: #101026;

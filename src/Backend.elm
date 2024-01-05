@@ -153,6 +153,9 @@ updateFromFrontend sessionId clientId msg model =
         TbRemoveCypher id index ->
             updateId id (\char -> { char | cyphers = removeCypher index char.cyphers }) model
 
+        TbToggleLevity id levity ->
+            updateId id (\char -> { char | levity = levity }) model
+
 
 maybeAddCypher : CypherInstance -> Int -> Character -> Character
 maybeAddCypher cypher recoveryId char =
@@ -167,7 +170,7 @@ maybeAddRecovery : Int -> Character -> Character
 maybeAddRecovery d6 char =
     let
         totalRecoverable =
-            d6 + char.tier + char.extraRecovery + char.pendingRecovery
+            d6 + Chars.baseRecovery char + char.pendingRecovery
 
         resetPool pool =
             { pool | used = 0 }

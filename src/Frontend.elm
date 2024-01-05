@@ -274,7 +274,7 @@ viewWhoAreYou model =
         [ Html.h3 [] [ Html.text "Who are you?" ]
         , model.characters
             |> List.sortBy .name
-            |> List.map (\c -> Html.div [ class "mb1" ] [ Html.button [ onClick <| OnSelectCharacter c.id ] [ Html.text c.name ]])
+            |> List.map (\c -> Html.div [ class "mb1" ] [ Html.button [ onClick <| OnSelectCharacter c.id ] [ Html.text c.name ] ])
             |> Html.div [ class "col" ]
         ]
 
@@ -505,7 +505,8 @@ viewCharacter model pc =
             [ class "row wrap" ]
             [ Html.div
                 [ class "mr2 mb2" ]
-                [ let
+                [ viewLevity model pc
+                , let
                     start =
                         if isSt model then
                             -1
@@ -583,6 +584,26 @@ viewPool model pt char =
         }
 
 
+viewLevity : Model -> Character -> Html Msg
+viewLevity model char =
+    Html.div
+        [ class "alignCenter lowlight" ]
+        [ Html.button
+            [ HA.disabled True
+            , class "hidden mr1"
+            ]
+            [ Html.text "D6 + 0" ]
+        , Html.input
+            [ HA.checked char.levity
+            , HA.type_ "checkbox"
+            , HA.disabled (not <| isSelected model char || isSt model)
+            , onRecklessClick <| TbToggleLevity char.id (not char.levity)
+            ]
+            []
+        , Html.text "Levity"
+        ]
+
+
 viewRecovery : Model -> Character -> Int -> Html Msg
 viewRecovery model char rec =
     let
@@ -609,7 +630,8 @@ viewRecovery model char rec =
         isClickable =
             (isSt model && rec == -1) || (isNext && isSelected model char)
     in
-    Html.div [ class "alignCenter" ]
+    Html.div
+        [ class "alignCenter" ]
         [ Html.button
             [ HA.disabled <| not isClickable
             , onRecklessClick <| TbRecovery char.id rec
@@ -617,8 +639,8 @@ viewRecovery model char rec =
             , classList [ ( "hidden", not isClickable ) ]
             ]
             [ Html.text "D6 + "
-            , char.tier
-                + char.extraRecovery
+            , char
+                |> Chars.baseRecovery
                 |> String.fromInt
                 |> Html.text
             ]

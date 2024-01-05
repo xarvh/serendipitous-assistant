@@ -17,7 +17,6 @@ type alias Character =
     , url : String
     , tier : Int
     , xps : Int
-
     , might : Pool
     , speed : Pool
     , intellect : Pool
@@ -26,6 +25,7 @@ type alias Character =
     , nextRecovery : Int
     , extraRecovery : Int
     , pendingRecovery : Int
+    , levity : Bool
     }
 
 
@@ -44,8 +44,17 @@ initCharacter =
     , nextRecovery = 0
     , extraRecovery = 0
     , pendingRecovery = 0
+    , levity = False
     }
 
+
+baseRecovery : Character -> Int
+baseRecovery char =
+    if char.levity then
+        char.tier + char.extraRecovery + 1
+
+    else
+        char.tier + char.extraRecovery
 
 
 characterDecoder : Decoder Character
@@ -64,6 +73,7 @@ characterDecoder =
         |> required "nextRecovery" Json.Decode.int
         |> required "extraRecovery" Json.Decode.int
         |> required "pendingRecovery" Json.Decode.int
+        |> required "levity" Json.Decode.bool
 
 
 encodeCharacter : Character -> Json.Encode.Value
@@ -82,6 +92,7 @@ encodeCharacter c =
         , ( "nextRecovery", Json.Encode.int c.nextRecovery )
         , ( "extraRecovery", Json.Encode.int c.extraRecovery )
         , ( "pendingRecovery", Json.Encode.int c.pendingRecovery )
+        , ( "levity", Json.Encode.bool c.levity )
         ]
 
 
