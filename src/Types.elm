@@ -35,6 +35,7 @@ type FrontendMsg
 type alias BackendModel =
     { characters : List Character
     , seed : Random.Seed
+    , nextCypherId : Int
     }
 
 
@@ -53,6 +54,7 @@ type ToBackend
     | TbRecovery Id Int
     | TbAddCypher Id
     | TbRemoveCypher Id Int
+    | TbGiveCypherTo Id Int String
     | TbToggleLevity Id Bool
 
 

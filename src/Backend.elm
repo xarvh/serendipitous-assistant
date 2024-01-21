@@ -3,12 +3,45 @@ module Backend exposing (..)
 import Chars exposing (..)
 import Cyphers exposing (CypherType, Roll)
 import Lamdera
+import List.Extra
 import Random exposing (Generator)
 import Random.Extra
 import Random.List
 import Task
 import Time
 import Types exposing (..)
+
+
+when : Bool -> (a -> a) -> a -> a
+when test upd a =
+    if test then
+        upd a
+
+    else
+        a
+
+
+findBy : (a -> id) -> id -> List a -> Maybe a
+findBy getId id =
+    List.Extra.find (\a -> getId a == id)
+
+
+removeBy : (a -> id) -> id -> List a -> List a
+removeBy getId id =
+    List.filter (\a -> getId a /= id)
+
+
+updateBy : (a -> id) -> id -> (a -> a) -> List a -> List a
+updateBy getId id upd =
+    let
+        f a =
+            if getId a == id then
+                upd a
+
+            else
+                a
+    in
+    List.map f
 
 
 {-| Main
@@ -39,6 +72,7 @@ init =
             , { initCharacter | id = 1, name = "Emerald" }
             ]
       , seed = Random.initialSeed 0
+      , nextCypherId = 0
       }
     , Task.perform OnInitTime (Task.map Time.posixToMillis Time.now)
     )
@@ -53,7 +87,7 @@ update msg model =
 
 updateId : Id -> (Character -> Character) -> Model -> ( Model, Cmd Msg )
 updateId id upd model =
-    sendPcs { model | characters = List.map (updateIfId id upd) model.characters }
+    sendPcs { model | characters = updateBy .id id upd model.characters }
 
 
 updatePool : PoolType -> (Pool -> Pool) -> Character -> Character
@@ -67,15 +101,6 @@ updatePool pt upd c =
 
         Intellect ->
             { c | intellect = upd c.intellect }
-
-
-updateIfId : Id -> (Character -> Character) -> Character -> Character
-updateIfId id upd c =
-    if c.id == id then
-        upd c
-
-    else
-        c
 
 
 sendPcs : Model -> ( Model, Cmd Msg )
@@ -125,11 +150,10 @@ updateFromFrontend sessionId clientId msg model =
             let
                 ( d6, seed1 ) =
                     Random.step (Random.int 1 6) model.seed
-
-                ( cypher, seed2 ) =
-                    Random.step cypherGenerator seed1
             in
-            { model | seed = seed2 }
+            { model | seed = seed1 }
+                -- TODO clean up, should not be discarding the Cmd
+                |> when (recoveryGivesCypher rec) (newCypherToCharacter id >> Tuple.first)
                 |> updateId id
                     (\char ->
                         (if rec == -1 then
@@ -138,32 +162,59 @@ updateFromFrontend sessionId clientId msg model =
                          else
                             { char | nextRecovery = rec + 1 |> modBy 4 }
                         )
-                            |> maybeAddCypher cypher rec
                             |> maybeAddRecovery d6
                     )
 
         TbAddCypher id ->
-            let
-                ( cypher, seed1 ) =
-                    Random.step cypherGenerator model.seed
-            in
-            { model | seed = seed1 }
-                |> updateId id (\char -> { char | cyphers = char.cyphers ++ [ cypher ] })
+            newCypherToCharacter id model
 
-        TbRemoveCypher id index ->
-            updateId id (\char -> { char | cyphers = removeCypher index char.cyphers }) model
+        TbRemoveCypher charId cypherId ->
+            updateId charId (\char -> { char | cyphers = useOrRemoveCypher cypherId char.cyphers }) model
+
+        TbGiveCypherTo fromCharacterId cypherId toCharacterIdString ->
+            let
+                maybeCharacter =
+                    findBy .id fromCharacterId model.characters
+
+                maybeCypher =
+                    Maybe.andThen (\c -> findBy .id cypherId c.cyphers) maybeCharacter
+
+                maybeToCharacterId =
+                    String.toInt toCharacterIdString
+            in
+            case ( maybeCypher, maybeToCharacterId ) of
+                ( Just cypher, Just toCharacterId ) ->
+                    { model
+                        | characters =
+                            model.characters
+                                |> updateBy .id fromCharacterId (\char -> { char | cyphers = removeBy .id cypherId char.cyphers })
+                                |> updateBy .id toCharacterId (\char -> { char | cyphers = cypher :: char.cyphers })
+                    }
+                        |> sendPcs
+
+                _ ->
+                    noCmd model
 
         TbToggleLevity id levity ->
             updateId id (\char -> { char | levity = levity }) model
 
 
-maybeAddCypher : CypherInstance -> Int -> Character -> Character
-maybeAddCypher cypher recoveryId char =
-    if recoveryId == 2 || recoveryId == 3 then
-        { char | cyphers = char.cyphers ++ [ cypher ] }
+newCypherToCharacter : Id -> Model -> ( Model, Cmd Msg )
+newCypherToCharacter id model =
+    let
+        ( cypherNoId, seed1 ) =
+            Random.step cypherGenerator model.seed
 
-    else
-        char
+        cypher =
+            { cypherNoId | id = model.nextCypherId }
+    in
+    { model | seed = seed1, nextCypherId = cypher.id + 1 }
+        |> updateId id (\char -> { char | cyphers = char.cyphers ++ [ cypher ] })
+
+
+recoveryGivesCypher : Int -> Bool
+recoveryGivesCypher recoveryId =
+    recoveryId == 2 || recoveryId == 3
 
 
 maybeAddRecovery : Int -> Character -> Character
@@ -187,24 +238,18 @@ maybeAddRecovery d6 char =
         }
 
 
-removeCypher : Int -> List CypherInstance -> List CypherInstance
-removeCypher index l =
-    let
-        before =
-            List.take index l
-    in
-    case List.drop index l of
-        [] ->
+useOrRemoveCypher : Id -> List CypherInstance -> List CypherInstance
+useOrRemoveCypher cypherId l =
+    case findBy .id cypherId l of
+        Nothing ->
             l
 
-        cypher :: after ->
+        Just cypher ->
             if cypher.used then
-                -- Remove the cypher
-                before ++ after
+                removeBy .id cypherId l
 
             else
-                -- Set the cypher as used
-                before ++ { cypher | used = True } :: after
+                updateBy .id cypherId (\c -> { c | used = True }) l
 
 
 
@@ -226,6 +271,7 @@ cypherTypeToInstanceGenerator maybeType =
                 , level = 0
                 , info = "Some list was empty"
                 , used = True
+                , id = -1
                 }
 
         Just t ->
@@ -246,6 +292,7 @@ makeCypher t d6 rollEffects =
             |> (::) t.description
             |> String.join "\n"
     , used = False
+    , id = -1
     }
 
 

@@ -139,6 +139,7 @@ type alias CypherInstance =
     , level : Int
     , info : String
     , used : Bool
+    , id : Int
     }
 
 
@@ -149,6 +150,7 @@ cypherDecoder =
         |> required "level" Json.Decode.int
         |> required "info" Json.Decode.string
         |> required "used" Json.Decode.bool
+        |> required "id" Json.Decode.int
 
 
 encodeCypher : CypherInstance -> Json.Encode.Value
@@ -158,6 +160,7 @@ encodeCypher c =
         , ( "level", Json.Encode.int c.level )
         , ( "info", Json.Encode.string c.info )
         , ( "used", Json.Encode.bool c.used )
+        , ( "id", Json.Encode.int c.id )
         ]
 
 

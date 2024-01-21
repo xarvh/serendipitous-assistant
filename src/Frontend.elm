@@ -7,6 +7,7 @@ import Css
 import Html exposing (Html)
 import Html.Attributes as HA exposing (class, classList, style)
 import Html.Events exposing (onClick)
+import Html.Keyed
 import Json.Decode
 import Json.Encode
 import Lamdera
@@ -21,6 +22,27 @@ port xarvh_elm_notifications_to_js : { title : String, body : String, icon : Str
 notificationCmd : { title : String, body : String } -> Cmd msg
 notificationCmd { title, body } =
     xarvh_elm_notifications_to_js { body = body, title = title, icon = "" }
+
+
+{-| Html
+-}
+o : Html msg
+o =
+    Html.text ""
+
+
+when : Bool -> Html msg -> Html msg
+when test content =
+    if test then
+        content
+
+    else
+        o
+
+
+onRecklessChange : (String -> ToBackend) -> Html.Attribute Msg
+onRecklessChange tb =
+    Html.Events.on "change" (Json.Decode.map (tb >> OnRecklessSend) Html.Events.targetValue)
 
 
 {-| Main
@@ -518,11 +540,11 @@ viewCharacter model pc =
                     |> List.map (viewRecovery model pc)
                     |> Html.div []
                 ]
-            , Html.div
+            , Html.Keyed.node "div"
                 []
                 (List.concat
                     [ List.indexedMap (viewCypher model pc) pc.cyphers
-                    , [ maybeViewAddCypher model pc ]
+                    , [ ( "add", maybeViewAddCypher model pc ) ]
                     ]
                 )
             ]
@@ -651,7 +673,7 @@ viewRecovery model char rec =
         ]
 
 
-viewCypher : Model -> Character -> Int -> CypherInstance -> Html Msg
+viewCypher : Model -> Character -> Int -> CypherInstance -> ( String, Html Msg )
 viewCypher model pc index cypher =
     let
         usableSoFar =
@@ -663,24 +685,10 @@ viewCypher model pc index cypher =
         isExcess =
             not cypher.used && usableSoFar >= pc.maxCyphers
     in
-    Html.div
+    ( String.fromInt cypher.id
+    , Html.div
         [ class "row mb1" ]
-        [ if isSelected model pc then
-            Html.div
-                []
-                [ Html.button
-                    [ class "mr1", onRecklessClick <| TbRemoveCypher pc.id index ]
-                    [ if cypher.used then
-                        Html.text "⨉"
-
-                      else
-                        Html.text "-"
-                    ]
-                ]
-
-          else
-            Html.text ""
-        , Html.details
+        [ Html.details
             []
             [ Html.summary
                 [ classList
@@ -691,7 +699,38 @@ viewCypher model pc index cypher =
                 [ Html.text cypher.name ]
             , Html.div
                 [ class "ml2 mb2" ]
-                [ Html.div
+                [ o
+                , when (isSelected model pc) <|
+                    Html.div
+                        [ class "row" ]
+                        [ Html.button
+                            [ class "mr1 mb1"
+                            , onRecklessClick <| TbRemoveCypher pc.id cypher.id
+                            , HA.disabled cypher.used
+                            ]
+                            [ Html.text "Consume"
+                            ]
+                        , when cypher.used <|
+                            Html.button
+                                [ class "mr1 mb1"
+                                , onRecklessClick <| TbRemoveCypher pc.id cypher.id
+                                ]
+                                [ Html.text "Remove"
+                                ]
+                        , when (not cypher.used) <|
+                            Html.select
+                                [ onRecklessChange <| TbGiveCypherTo pc.id cypher.id ]
+                                (Html.option
+                                    [ HA.selected True ]
+                                    [ Html.text "Give to..." ]
+                                    :: (model.characters
+                                            |> List.filter (\c -> c.id /= pc.id)
+                                            |> List.sortBy .name
+                                            |> List.map (\c -> Html.option [ HA.value <| String.fromInt c.id ] [ Html.text c.name ])
+                                       )
+                                )
+                        ]
+                , Html.div
                     [ class "mb1 bold" ]
                     [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
                 , cypher.info
@@ -700,19 +739,5 @@ viewCypher model pc index cypher =
                     |> Html.div []
                 ]
             ]
-
-        {-
-           , Html.div
-               [ class "tooltip" ]
-               [ Html.div
-                   [ class "mb2 bold"
-                   ]
-                   [ Html.text cypher.name ]
-               , Html.div [] [ Html.text <| "Level: " ++ String.fromInt cypher.level ]
-               , cypher.info
-                   |> String.split "\n"
-                   |> List.map (\s -> Html.p [] [ Html.text s ])
-                   |> Html.div []
-               ]
-        -}
         ]
+    )

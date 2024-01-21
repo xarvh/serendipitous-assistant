@@ -28,9 +28,20 @@ body {
   font-family: 'Electrolize', sans-serif;
 }
 
-button {
+button, select {
   min-width: 2em;
+  height: 2em;
+  font-weight: bold;
+
+  background-color: #fff;
+  border: none;
+  border-radius: 0.25em;
 }
+
+select {
+  padding-right: 0.5em;
+}
+
 
 input[type='checkbox'] {
   margin: 0;
