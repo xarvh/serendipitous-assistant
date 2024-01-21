@@ -124,6 +124,7 @@ init url key =
       , edit = ""
       , url = url
       , navKey = key
+      , allowNotifications = False
       }
     , Lamdera.sendToBackend TbRequestCharacters
     )
@@ -169,6 +170,15 @@ update msg model =
                     Cmd.none
             )
 
+        OnAllowNotifications ->
+            if model.allowNotifications then
+                noCmd { model | allowNotifications = False }
+
+            else
+                ( { model | allowNotifications = True }
+                , notificationCmd { title = "Yay!", body = "Notifications are enabled!" }
+                )
+
 
 pcsFromString =
     Json.Decode.decodeString (Json.Decode.list characterDecoder)
@@ -185,9 +195,13 @@ updateFromBackend msg model =
                         |> Json.Encode.list encodeCharacter
                         |> Json.Encode.encode 2
               }
-            , makeNotifications model pcs
-                |> List.map notificationCmd
-                |> Cmd.batch
+            , if not model.allowNotifications then
+                Cmd.none
+
+              else
+                makeNotifications model pcs
+                    |> List.map notificationCmd
+                    |> Cmd.batch
             )
 
 
@@ -256,6 +270,16 @@ view model =
                         |> List.map (viewCharacter model)
                         |> Html.div [ class "mr2" ]
                     ]
+        , Html.div
+            []
+            [ Html.input
+                [ onClick OnAllowNotifications
+                , HA.type_ "checkbox"
+                , HA.checked model.allowNotifications
+                ]
+                []
+            , Html.label [] [ Html.text "Allow notifications" ]
+            ]
         , Html.node "style"
             []
             [ Html.text Css.css ]

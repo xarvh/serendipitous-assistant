@@ -19,6 +19,7 @@ type alias FrontendModel =
     , edit : String
     , url : Url
     , navKey : Key
+    , allowNotifications : Bool
     }
 
 
@@ -28,6 +29,7 @@ type FrontendMsg
     | OnRecklessSend ToBackend
     | OnSelectCharacter Id
     | OnTextareaInput String
+    | OnAllowNotifications
 
 
 {-| Backend
